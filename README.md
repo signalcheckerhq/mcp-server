@@ -59,4 +59,6 @@ curl -s https://signalcheckerhq.org/mcp -H 'content-type: application/json' \
 
 Built by [SignalCheckerHQ](https://signalcheckerhq.org): free tools and open-source [TradingView scripts](https://github.com/signalcheckerhq/tradingview-scripts) that check crypto signals and bots on real prices. Contact: support@signalcheckerhq.org
 
+`mcp.js` is the Cloudflare Pages Function that runs the server, for reference (it imports the site's signal-check engine, which is not included here).
+
 License of this README and the tool descriptions: MIT.

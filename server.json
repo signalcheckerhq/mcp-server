@@ -1,10 +1,27 @@
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "org.signalcheckerhq/signalcheckerhq",
   "title": "SignalCheckerHQ",
   "description": "Check crypto signal calls, liquidation price, position size and safe leverage on real prices.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "websiteUrl": "https://signalcheckerhq.org/mcp-server/",
-  "repository": { "url": "https://github.com/signalcheckerhq/mcp-server", "source": "github" },
-  "remotes": [ { "type": "streamable-http", "url": "https://signalcheckerhq.org/mcp" } ]
+  "repository": {
+    "url": "https://github.com/signalcheckerhq/mcp-server",
+    "source": "github"
+  },
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://signalcheckerhq.org/mcp"
+    }
+  ],
+  "icons": [
+    {
+      "src": "https://signalcheckerhq.org/assets/img/icon.png",
+      "mimeType": "image/png",
+      "sizes": [
+        "256x256"
+      ]
+    }
+  ]
 }

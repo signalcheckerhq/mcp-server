@@ -40,10 +40,10 @@ export const TOOLS = [
     inputSchema: {
       type: "object",
       properties: {
-        side: { type: "string", enum: ["long", "short"] },
-        entry: { type: "number", exclusiveMinimum: 0, description: "Entry price." },
-        leverage: { type: "number", minimum: 1, maximum: 200 },
-        stop: { type: "number", exclusiveMinimum: 0, description: "Optional stop-loss price." },
+        side: { type: "string", enum: ["long", "short"], description: "Position direction: long (profits when price rises) or short (profits when price falls)." },
+        entry: { type: "number", exclusiveMinimum: 0, description: "Entry price of the position, in the quote currency (e.g. USD)." },
+        leverage: { type: "number", minimum: 1, maximum: 200, description: "Leverage multiple, e.g. 10 for 10x. Isolated margin is assumed." },
+        stop: { type: "number", exclusiveMinimum: 0, description: "Optional stop-loss price. If given, the answer says whether liquidation comes before the stop." },
         maintenance_margin_pct: { type: "number", minimum: 0, maximum: 10, description: "Maintenance margin in percent. Default 0.5." },
       },
       required: ["side", "entry", "leverage"],
@@ -59,9 +59,9 @@ export const TOOLS = [
       properties: {
         account: { type: "number", exclusiveMinimum: 0, description: "Account size in USD." },
         risk_pct: { type: "number", exclusiveMinimum: 0, maximum: 100, description: "Share of the account to risk, in percent (e.g. 1)." },
-        entry: { type: "number", exclusiveMinimum: 0 },
-        stop: { type: "number", exclusiveMinimum: 0 },
-        leverage: { type: "number", minimum: 1, maximum: 200, description: "Optional. Default 1." },
+        entry: { type: "number", exclusiveMinimum: 0, description: "Planned entry price." },
+        stop: { type: "number", exclusiveMinimum: 0, description: "Stop-loss price. Below the entry for a long, above it for a short; the side is read from this." },
+        leverage: { type: "number", minimum: 1, maximum: 200, description: "Leverage used to work out the margin needed. Optional, default 1 (no leverage)." },
         fee_pct: { type: "number", minimum: 0, maximum: 1, description: "Fee per side in percent. Default 0.05." },
       },
       required: ["account", "risk_pct", "entry", "stop"],
@@ -76,9 +76,9 @@ export const TOOLS = [
       type: "object",
       properties: {
         coin: { type: "string", description: "Ticker, e.g. BTC, ETH, SOL." },
-        side: { type: "string", enum: ["long", "short"], description: "Default long." },
+        side: { type: "string", enum: ["long", "short"], description: "Position direction to test. Default long." },
         hold_hours: { type: "integer", minimum: 1, maximum: 168, description: "How long the position is held. Default 24." },
-        maintenance_margin_pct: { type: "number", minimum: 0, maximum: 5, description: "Default 0.5." },
+        maintenance_margin_pct: { type: "number", minimum: 0, maximum: 5, description: "Maintenance margin in percent. Default 0.5." },
       },
       required: ["coin"],
     },
@@ -196,7 +196,7 @@ export async function handleRpc(m, nowMs = Date.now()) {
     case "initialize": {
       const v = PROTOCOLS.includes(p.protocolVersion) ? p.protocolVersion : PROTOCOLS[0];
       return ok({ protocolVersion: v, capabilities: { tools: { listChanged: false } },
-        serverInfo: { name: "signalcheckerhq", title: "SignalCheckerHQ", version: VERSION, websiteUrl: "https://signalcheckerhq.org/mcp-server/" }, instructions: INSTRUCTIONS });
+        serverInfo: { name: "signalcheckerhq", title: "SignalCheckerHQ", version: VERSION, websiteUrl: "https://signalcheckerhq.org/mcp-server/", icons: [{ src: "https://signalcheckerhq.org/assets/img/icon.png", mimeType: "image/png", sizes: ["256x256"] }] }, instructions: INSTRUCTIONS });
     }
     case "ping": return ok({});
     case "tools/list": return ok({ tools: TOOLS });

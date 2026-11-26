@@ -17,6 +17,9 @@ More: https://signalcheckerhq.org/mcp-server/
 
 All tools are annotated `readOnlyHint: true`.
 
+## Official MCP Registry
+Listed as `org.signalcheckerhq/signalcheckerhq` in the [official MCP Registry](https://registry.modelcontextprotocol.io/v0/servers?search=signalcheckerhq) (remote, Streamable HTTP, no authentication).
+
 ## Add it
 
 **Claude** (claude.ai or desktop): Settings → Connectors → Add custom connector → paste `https://signalcheckerhq.org/mcp`.

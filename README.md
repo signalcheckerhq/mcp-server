@@ -1,5 +1,7 @@
 # SignalCheckerHQ MCP server
 
+[![Listed on mcpservers.org](https://mcpservers.org/badge.svg)](https://mcpservers.org/servers/signalcheckerhq/mcp-server)
+
 Free, read-only remote [MCP](https://modelcontextprotocol.io) server that lets AI assistants check crypto trading claims on real prices, with fees counted.
 
 **Server URL:** `https://signalcheckerhq.org/mcp` (Streamable HTTP, no API key, no sign-up, nothing stored)

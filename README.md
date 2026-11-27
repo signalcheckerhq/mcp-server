@@ -16,6 +16,7 @@ More: https://signalcheckerhq.org/mcp-server/
 | `liquidation_price` | Liquidation price of an isolated-margin long or short, whether it comes before your stop, and the highest leverage your stop allows. |
 | `position_size` | Position size so the stop loses only the chosen share of the account (fees included), margin needed, liquidation vs stop. |
 | `leverage_survival` | For a coin: share of the last ~1,000 hourly entries that 2x–100x would have lost to liquidation within the holding time, and the leverage 90% / 99% of entries survived. |
+| `leverage_ceiling` | Today's Leverage Ceiling for 12 major coins: the highest leverage 99 in 100 real entries survived (1-day / 1-week, long / short), with the value 7 and 30 days ago. |
 
 All tools are annotated `readOnlyHint: true`.
 

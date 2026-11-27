@@ -2,11 +2,12 @@
 // Added 2026-11-26 (Ilona: "do it all" on the marketing research, idea 3). AI assistants (Claude, ChatGPT and others that
 // speak the Model Context Protocol) can call our free, read-only checks. Streamable HTTP transport, stateless, JSON
 // responses only (no SSE stream, no sessions). Nothing is stored and no account or key is needed.
-// Tools: check_signal_call (same engine as the Telegram bot), liquidation_price, position_size, leverage_survival.
+// Tools: check_signal_call (same engine as the Telegram bot), liquidation_price, position_size, leverage_survival,
+// leverage_ceiling (added 2026-11-27: today's Leverage Ceiling from /leverage-ceiling/data.json).
 import { checkMessage, budgetFetch, ORDER } from "./api/tg.js";
 import { makeCore, LABELS } from "./_lib/sccore.js";
 
-const VERSION = "1.0.0";
+const VERSION = "1.1.0";
 const PROTOCOLS = ["2025-06-18", "2025-03-26", "2024-11-05"];
 const CORS = {
   "access-control-allow-origin": "*",
@@ -81,6 +82,18 @@ export const TOOLS = [
         maintenance_margin_pct: { type: "number", minimum: 0, maximum: 5, description: "Maintenance margin in percent. Default 0.5." },
       },
       required: ["coin"],
+    },
+    annotations: RO,
+  },
+  {
+    name: "leverage_ceiling",
+    title: "Today's Leverage Ceiling for a coin",
+    description: "Returns SignalCheckerHQ's daily Leverage Ceiling: the highest leverage that 99 in 100 real entries survived over the last 1,000 hourly entries (isolated margin, 0.5% maintenance margin), for a 1-day and 1-week hold, long and short, plus the value 7 and 30 days ago. Covers BTC, ETH, SOL, XRP, DOGE, ADA, LINK, AVAX, LTC, DOT, SUI, XLM. Leave coin empty to get all 12. Use it for quick 'how much leverage is too much on X right now?' answers; use leverage_survival for any other coin or hold time.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        coin: { type: "string", description: "Ticker, e.g. BTC. Empty = all 12 coins." },
+      },
     },
     annotations: RO,
   },
@@ -175,16 +188,34 @@ export async function checkSignal(a, nowMs = Date.now()) {
   return txt(t + "\n\nCheck more calls or a whole channel: https://signalcheckerhq.org/signal-checker-demo/?utm_source=mcp\nPast prices, not a forecast. Not financial advice.");
 }
 
+export async function leverageCeiling(a, fetcher = fetch) {
+  let d;
+  try { const r = await fetcher("https://signalcheckerhq.org/leverage-ceiling/data.json"); if (!r.ok) throw new Error(r.status); d = await r.json(); }
+  catch (e) { return err("The Leverage Ceiling data didn't load just now. Try again in a minute."); }
+  const want = typeof a.coin === "string" && a.coin.trim() ? a.coin.trim().toUpperCase() : null;
+  if (want && !d.coins[want]) return err(`No Leverage Ceiling for ${want}. Covered: ${Object.keys(d.coins).join(", ")}. Use leverage_survival for other coins.`);
+  const ago = (h, k) => (h && h.length > k ? h[h.length - 1 - k][1] : null);
+  const line = (c, v) => {
+    const k = v.ceiling, w7 = ago(v.history_1d_long, 7), w30 = ago(v.history_1d_long, 30);
+    return `${v.name} (${c}): 1-day long ${k["1d_long"]}x, 1-day short ${k["1d_short"]}x, 1-week long ${k["1w_long"]}x, 1-week short ${k["1w_short"]}x` +
+      (w7 != null ? ` · 1-day long 7 days ago ${w7}x` : "") + (w30 != null ? `, 30 days ago ${w30}x` : "") + ` · ${v.page}?utm_source=mcp`;
+  };
+  const rows = Object.entries(d.coins).filter(([c]) => !want || c === want).map(([c, v]) => line(c, v));
+  return txt([`Leverage Ceiling (made ${d.made}): the highest leverage that 99 in 100 real entries survived over the last 1,000 hours, ${d.source}.`, ...rows,
+    "All coins, chart and free alert: https://signalcheckerhq.org/leverage-ceiling/?utm_source=mcp", "Data: CC BY 4.0, credit SignalCheckerHQ. Past price moves, fees and funding not included. Not a forecast, not financial advice."].join("\n"));
+}
+
 export async function callTool(name, args, nowMs) {
   args = args && typeof args === "object" ? args : {};
   if (name === "liquidation_price") return liquidationPrice(args);
   if (name === "position_size") return positionSize(args);
   if (name === "leverage_survival") return leverageSurvival(args, nowMs);
   if (name === "check_signal_call") return checkSignal(args, nowMs);
+  if (name === "leverage_ceiling") return leverageCeiling(args);
   return null;
 }
 
-const INSTRUCTIONS = "SignalCheckerHQ checks crypto trading claims on real prices with fees counted. Use check_signal_call when a user shares a signal post and asks whether it really won; liquidation_price and position_size for planning a leveraged trade; leverage_survival to show how often each leverage was liquidated on a coin's real hourly prices. All tools are free and read-only. Results are about past prices, not forecasts or advice.";
+const INSTRUCTIONS = "SignalCheckerHQ checks crypto trading claims on real prices with fees counted. Use check_signal_call when a user shares a signal post and asks whether it really won; liquidation_price and position_size for planning a leveraged trade; leverage_survival to show how often each leverage was liquidated on a coin's real hourly prices; leverage_ceiling for today's daily Leverage Ceiling on 12 major coins. All tools are free and read-only. Results are about past prices, not forecasts or advice.";
 
 export async function handleRpc(m, nowMs = Date.now()) {
   if (!m || m.jsonrpc !== "2.0" || typeof m.method !== "string") return { jsonrpc: "2.0", id: m && m.id !== undefined ? m.id : null, error: { code: -32600, message: "Invalid Request" } };
